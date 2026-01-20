@@ -1,0 +1,36 @@
+name: Build DEB and RPM packages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y dpkg-dev rpm
+
+      - name: Build DEB package
+        run: |
+          mkdir -p deb/file-counter/DEBIAN
+          mkdir -p deb/file-counter/usr/local/bin
+          cp count_files.sh deb/file-counter/usr/local/bin/file-counter
+          echo -e "Package: file-counter\nVersion: 1.0\nSection: base\nPriority: optional\nArchitecture: all\nMaintainer: Nazar Morziev\nDescription: Counts regular files in /etc directory" > deb/file-counter/DEBIAN/control
+          dpkg-deb --build deb/file-counter
+
+      - name: Build RPM package
+        run: |
+          mkdir -p rpm/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          mkdir file-counter-1.0
+          cp count_files.sh file-counter-1.0/
+          tar -czf rpm/SOURCES/file-counter-1.0.tar.gz file-counter-1.0
+          echo -e "Name: file-counter\nVersion: 1.0\nRelease: 1\nSummary: Bash script counting files in /etc\nLicense: GPL\nBuildArch: noarch\nSource0: file-counter-1.0.tar.gz\n\n%description\nCounts regular files in /etc excluding directories and symlinks.\n\n%prep\n%setup -q\n\n%install\nmkdir -p %{buildroot}/usr/local/bin\ncp count_files.sh %{buildroot}/usr/local/bin/file-counter\n\n%files\n/usr/local/bin/file-counter" > rpm/SPECS/file-counter.spec
+          rpmbuild --define "_topdir $(pwd)/rpm" -ba rpm/SPECS/file-counter.spec
+
