@@ -1,4 +1,3 @@
-nano count_files.sh
 #!/bin/bash
 
 TARGET_DIR="/etc"
