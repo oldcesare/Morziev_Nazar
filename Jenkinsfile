@@ -40,17 +40,20 @@ EOF
         }
 
         stage('Build RPM (no install)') {
-            steps {
-                sh '''
-                  rm -rf rpm file-counter-1.0 file_counter-1.0 file-counter-1.0
-                  mkdir -p rpm/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+    steps {
+        sh '''
+          set -e
 
-                  mkdir -p file-counter-1.0
-                  cp count_files.sh file-counter-1.0/
+          rm -rf rpm file-counter-1.0
 
-                  tar -czf rpm/SOURCES/file-counter-1.0.tar.gz file-counter-1.0
+          mkdir -p rpm/BUILD rpm/RPMS rpm/SOURCES rpm/SPECS rpm/SRPMS
 
-                  cat > rpm/SPECS/file-counter.spec <<'EOF'
+          mkdir -p file-counter-1.0
+          cp count_files.sh file-counter-1.0/
+
+          tar -czf rpm/SOURCES/file-counter-1.0.tar.gz file-counter-1.0
+
+          cat > rpm/SPECS/file-counter.spec <<'EOF'
 Name: file-counter
 Version: 1.0
 Release: 1
@@ -73,11 +76,12 @@ cp count_files.sh %{buildroot}/usr/local/bin/file-counter
 /usr/local/bin/file-counter
 EOF
 
-                  rpmbuild --define "_topdir $(pwd)/rpm" -ba rpm/SPECS/file-counter.spec
-                  ls -l rpm/RPMS/noarch/*.rpm
-                '''
-            }
-        }
+          rpmbuild --define "_topdir $(pwd)/rpm" -ba rpm/SPECS/file-counter.spec
+          ls -l rpm/RPMS/noarch/*.rpm
+        '''
+    }
+}
+
     }
 }
 
